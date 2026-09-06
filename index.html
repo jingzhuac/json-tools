@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="JSON 在线校验/格式化/压缩/排序/转义小工具：纯前端本地处理，数据不上传。粘贴即用，格式错误逐行提示。">
+<meta name="keywords" content="JSON格式化,JSON校验,JSON压缩,JSON在线,JSON工具,beautify,minify,本地JSON工具">
+<meta property="og:title" content="JSON 工具台 · 校验/美化/压缩 · 本地处理">
+<meta property="og:description" content="免费在线 JSON 校验与格式化：粘贴即用，错误定位、压缩、按键排序、单行转义——全程本机处理，数据绝不上传。">
+<meta property="og:type" content="website">
+<title>JSON 工具台 · 校验/美化/压缩 · 本地处理</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--bd:#e3e8ef;--tx:#1f2933;--mut:#6b7683;--acc:#2563eb;--acc-d:#1e40af;--ok:#16a34a;--warn:#d97706;--red:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+  header{padding:16px 22px;background:var(--card);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:700}
+  .tag{font-size:12px;color:#fff;background:var(--ok);border-radius:20px;padding:2px 10px;font-weight:600}
+  .priv{font-size:12px;color:var(--mut);margin-left:auto}
+  main{max-width:1000px;margin:20px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:16px}
+  h2{font-size:15px;margin:0 0 10px}
+  .muted{color:var(--mut);font-size:13px}
+  textarea{font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:13px;width:100%;min-height:150px;border:1px solid var(--bd);border-radius:8px;padding:10px;resize:vertical;background:#fbfcfe}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.cols{grid-template-columns:1fr}}
+  .tbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 12px}
+  button{font:inherit;border:none;border-radius:8px;padding:8px 14px;cursor:pointer}
+  .btn-p{background:var(--acc);color:#fff}
+  .btn-p:hover{background:var(--acc-d)}
+  .btn-o{background:#eef3ff;color:var(--acc-d)}
+  .btn-r{background:#fee2e2;color:#b91c1c}
+  .out{min-height:150px;white-space:pre-wrap;word-break:break-word;border:1px solid var(--bd);border-radius:8px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#0f172a;color:#e2e8f0;overflow:auto}
+  .st{font-size:12.5px;margin-top:8px}
+  .ok{color:var(--ok)} .bad{color:var(--red)} .mut{color:var(--mut)}
+  .errln{color:#fecaca;background:rgba(220,38,38,.15);border:1px solid #7f1d1d;border-radius:6px;padding:6px 10px;margin-top:6px;font-size:12px;word-break:break-word}
+  label.cb{display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;margin-right:10px}
+  footer{text-align:center;color:var(--mut);font-size:12px;padding:8px 0 30px}
+  input[type=file]{font:inherit}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚙️ JSON 工具台</h1>
+  <span class="tag">本地处理</span>
+  <span class="priv">🔒 全程在本机浏览器运行 · 数据不上传任何服务器</span>
+</header>
+<main>
+  <div class="card">
+    <h2>输入 JSON</h2>
+    <textarea id="in" spellcheck="false" placeholder='在此粘贴 JSON，例如 {"name":"金爪","tags":["工具",123]}，或点右侧「载入 .json 文件」。&#10;&#10;可先点「插入示例」体验；格式错误会提示到具体行。'></textarea>
+    <div class="tbar">
+      <button class="btn-p" id="btnBeauty">✓ 校验并美化</button>
+      <button class="btn-p" id="btnMinify">压缩</button>
+      <button class="btn-p" id="btnSort">美化 + 按键排序</button>
+      <button class="btn-o" id="btnEscape">转成单行转义串</button>
+      <button class="btn-o" id="btnSample">插入示例</button>
+      <button class="btn-o" id="btnLoad">载入 .json 文件</button>
+      <button class="btn-r" id="btnReset">清空</button>
+      <input type="file" id="file" accept=".json,application/json" class="hidden">
+    </div>
+    <label class="cb"><input type="checkbox" id="cSp2"> 缩进用 2 空格（默认 4）</label>
+    <label class="cb"><input type="checkbox" id="cSortOn"> 美化时按键排序（默认开）</label>
+  </div>
+
+  <div class="card">
+    <h2>输出 <span class="muted" id="outcap"></span></h2>
+    <div class="out" id="out"></div>
+    <div class="st" id="status"></div>
+    <div id="errbox"></div>
+    <div class="tbar">
+      <button class="btn-p" id="btnCopy">📋 复制结果</button>
+      <button class="btn-o" id="btnSwap">⬍ 结果放回输入框</button>
+      <span class="muted" id="stats"></span>
+    </div>
+  </div>
+  <footer>JSON 工具台 v1.0 · 纯前端本地处理 · 无上传无跟踪 · 金爪 🐾</footer>
+</main>
+<script>
+(()=>{
+  const $=id=>document.getElementById(id);
+  function setStatus(m,c){$('status').innerHTML='<span class="'+(c||'ok')+'">'+m+'</span>';}
+  function setErr(m){$('errbox').innerHTML=m?'<div class="errln">⚠ '+m+'</div>':'';}
+  function indent(){return $('cSp2').checked?2:4;}
+  $('btnReset').onclick=()=>{ $('in').value=''; $('out').textContent=''; setErr(''); setStatus('已清空','mut'); $('stats').textContent=''; };
+
+  function safeParse(text){
+    try{ return {ok:true, val:JSON.parse(text)}; }
+    catch(e){
+      const msg=(e&&e.message)?String(e.message):'解析失败';
+      const m2=msg.match(/position\s+(\d+)/i);
+      let line=1,col=1;
+      if(m2){const pos=+m2[1];const pre=text.slice(0,Math.min(pos,text.length));const a=pre.split('\n');line=a.length;col=a[a.length-1].length+1;}
+      return {ok:false,msg:'第 '+line+' 行 第 '+col+' 列：'+msg};
+    }
+  }
+  function keySort(x){
+    if(Array.isArray(x)) return x.map(v=>keySort(v));
+    if(x&&typeof x==='object'){
+      const o={};
+      Object.keys(x).sort().forEach(k=>{ o[k]=keySort(x[k]); });
+      return o;
+    }
+    return x;
+  }
+  function run(outFn){
+    const raw=$('in').value;
+    if(!raw.trim()){ setErr('输入框是空的：先粘贴 JSON 或点「插入示例」。'); setStatus('未解析','mut'); return; }
+    const p=safeParse(raw);
+    if(!p.ok){ setErr(p.msg); setStatus('校验未通过','bad'); return; }
+    setErr('');
+    let val=p.val;
+    if($('cSortOn').checked) val=keySort(val);
+    let out;
+    try{ out=outFn(val); }
+    catch(e){ setErr(String(e&&e.message||e)); return; }
+    $('out').textContent=out;
+    setStatus('✓ JSON 合法');
+    $('stats').textContent=(raw.trim().length)+'→'+(out.length)+' 字节 · '+(val&&typeof val==='object'?'对象':'标量');
+    $('out').scrollTop=$('out').scrollHeight;
+  }
+  $('btnBeauty').onclick=()=>run(v=>JSON.stringify(v,null,indent()));
+  $('btnMinify').onclick=()=>run(v=>JSON.stringify(v));
+  $('btnSort').onclick  =()=>run(v=>JSON.stringify(v,null,indent()));
+  $('btnEscape').onclick=()=>run(v=>{const s=JSON.stringify(v);return s.replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n');});
+  $('btnSample').onclick=()=>{
+    $('in').value='{\n  "工具":"JSON 工具台",\n  "能做什么":["校验并定位错误","美化缩进","压缩","按键排序","转义"],\n  "示例": {"姓名":"金爪","包含":[true,null,123,"本地处理"],"隐私":"数据不上传"},\n  "用法":"替换成你自己的 JSON 再点上面的按钮"\n}';
+    setErr(''); setStatus('已插入示例，点「✓ 校验并美化」看看效果','mut');
+  };
+  $('btnCopy').onclick=async()=>{
+    const o=$('out').textContent;
+    if(!o){ setStatus('结果为空','mut'); return; }
+    try{ await navigator.clipboard.writeText(o); setStatus('✅ 已复制到剪贴板'); }
+    catch(e){
+      const ta=document.createElement('textarea'); ta.value=o; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); setStatus('✅ 已复制'); }catch(e2){ setStatus('复制失败，请手动选中复制','bad'); }
+      document.body.removeChild(ta);
+    }
+  };
+  $('btnSwap').onclick=()=>{ const o=$('out').textContent; if(o){$('in').value=o; setStatus('已放回输入框','mut');} };
+  $('file').onchange=()=>{ const f=$('file').files[0]; if(!f)return;
+    const rd=new FileReader(); rd.onload=()=>{ $('in').value=String(rd.result); setStatus('已载入 '+f.name,'mut'); }; rd.readAsText(f,'utf-8'); };
+  $('btnLoad').onclick=()=>$('file').click();
+  setStatus('就绪：左侧粘贴 JSON → 点「✓ 校验并美化」','mut');
+})();
+</script>
+</body>
+</html>
