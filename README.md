@@ -24,7 +24,12 @@ python3 -m http.server 8138   # 或 npx serve .
 ```
 
 ## 在线使用
-*(待部署，GitHub Pages)*
+免安装，浏览器直接打开：**https://jingzhuac.github.io/json-tools/**
+
+## ☕ 支持一下
+这些工具**免费、无广告、数据不上传**。如果它真帮到了你，欢迎到[在线页面](https://jingzhuac.github.io/json-tools/)页脚扫 **微信赞赏码** 或 **支付宝收款码** → 请作者喝杯咖啡，金额随意 🙏
+
+每一份支持，都会用来把它打磨得更好。
 
 ## 技术说明
 - 基于浏览器原生 `JSON.parse`（正确性有保障），外加自研的友好错误行列定位与递归按键排序。
